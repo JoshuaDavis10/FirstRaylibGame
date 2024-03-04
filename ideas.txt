@@ -1,0 +1,8 @@
+GAME IDEAS:
+start with 2D for simplicity
+- movable character that can pick up objects
+    - implement a struct for boxes so you can have more than one (this will make you learn how to use structs lol)
+    - each time you get a box to objective, you get a point!
+    - once you reach 5 points (or some arbitrary quantity), you win!
+
+
