@@ -120,6 +120,8 @@ int main() {
             //then EndDrawing(); followed by CloseWindow(); if 
             //player position matches objective's position
 
+            //changes happening ayoo!!!!
+
 
         EndDrawing();
     }
