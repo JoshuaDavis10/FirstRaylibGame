@@ -1,7 +1,28 @@
 GAME IDEAS:
 start with 2D for simplicity
 - movable character that can pick up objects
-    - implement a struct for boxes so you can have more than one (this will make you learn how to use structs lol)
+    - implement a struct for boxes so you can have more than one. Box struct
+      should contain coordinates and size? or really just coordinates and have
+	const variable for all box sizes (for now at least)
+	-> you need a function that creates a box struct and draws a brown
+	rectangle at the coordinates of the created box struct. Try and get
+	this function and the box struct working for now I guess
+	^^^ current feature to be implemented
+    	-> I think that you need functions that take box structs as
+	you need like an indicator on each box that says if it's picked up or
+	not. 
+	-> The collision detection should only be run with the player? it
+	checks every frame if it has collided with a box, then updates the boxes bool
+	value to indicate that the box has been picked up which will trigger
+	the box moving with the player. maybe turn collision detection off at
+	this point so that player can't carry multiple boxes at once?
+	-> code to write
+		-> box struct and list of boxes
+		-> collision detector for player
+		-> collision detector for objective (when a box collides with
+
+objective, delete the box and increment
+		->
     - each time you get a box to objective, you get a point!
     - once you reach 5 points (or some arbitrary quantity), you win!
 

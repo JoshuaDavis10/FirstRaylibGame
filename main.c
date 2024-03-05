@@ -1,54 +1,152 @@
 #include "include/raylib.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-void runDemo() {
-    
+int boxSize = 20; 
+
+int playerPosX;
+int playerPosY;
+float playerSize;
+
+int objectivePosX;
+int objectivePosY;
+float objectiveSize;
+
+struct box{
+    int posX;
+    int posY;
+    bool exists;
+    bool isPickedUp;
+};
+
+//const int boxListSize = 10;
+struct box boxList[10]; //currently the value of 10 is hardcoded in quite a few places (for loops and such)
+			//I don't like that but not sure how to make it variable... blegh... things to learn
+
+//run this before we start drawing
+void createAllBoxes() {  
+   int xCoord;
+   int yCoord;	   
+   for(int i = 0; i < 10; i++) {
+	xCoord = rand() % 770 + 30;
+	yCoord = rand() % 420 + 30;
+	struct box newBox = {xCoord, yCoord, true, false};
+	boxList[i] = newBox;
+   }
+}
+
+//run this every draw "frame" ? (is that how you say that idk)
+void drawAllBoxes() {
+    for(int i = 0; i < 10; i++) {
+	if(boxList[i].exists)
+		DrawRectangle(boxList[i].posX, boxList[i].posY, boxSize, boxSize, BROWN);
+    }
+}
+
+//checks if the player collides with a box; if yes, updates that box's 'isPickedUp' value
+void playerCollisionDetection() {
+    int threshold = 7;
+    int xDiff;
+    int yDiff;
+    for(int i = 0; i < 10; i++) {
+	if((!boxList[i].isPickedUp)) {
+            xDiff = playerPosX - boxList[i].posX - 10;
+            yDiff = playerPosY - boxList[i].posY - 10; 
+            if((xDiff < threshold && xDiff > -threshold) && (yDiff < threshold && yDiff > -threshold)) 
+	        boxList[i].isPickedUp = true;
+        }	
+    }
+}
+
+
+//checks if the objective collides with a box; if yes, update that box's 'exists' value to false so that it isn't drawn
+//i would like to actually remove the struct as well rather than only not draw it. Problem for another time...
+void objectiveCollisionDetection() {
+    int threshold = 30;
+    int xDiff;
+    int yDiff;
+    for(int i = 0; i < 10; i++) {
+	if((boxList[i].exists)) {    
+	    xDiff = objectivePosX - boxList[i].posX - 10;
+	    yDiff = objectivePosY - boxList[i].posY - 10;
+	    if((xDiff < threshold && xDiff > -threshold) && (yDiff < threshold && yDiff > -threshold)) 
+		boxList[i].exists = false;
+	}
+    }
+}
+
+//handles movement for player and moves boxes with the isPickedUp value of true
+void handleMovement() {
+	
+    //handle player movement	
+    if(IsKeyDown(KEY_UP)) {
+	playerPosY--;
+    }		    
+    if(IsKeyDown(KEY_RIGHT)) {
+	playerPosX++;
+    }
+    if(IsKeyDown(KEY_DOWN)) {
+	playerPosY++;
+    }
+    if(IsKeyDown(KEY_LEFT)) {
+	playerPosX--;
+    }
+
+    //handle box movement
+    //NOTE: when you set it up so that only one box can be carried at a time, you won't want to do movement handling for
+    //every box; only the box that is being carried
+    for(int i = 0; i < 10; i++) {
+	if(boxList[i].isPickedUp) {
+	    if(IsKeyDown(KEY_UP)) 
+		boxList[i].posY--;
+
+	    if(IsKeyDown(KEY_RIGHT)) 
+		boxList[i].posX++;
+	        
+	    if(IsKeyDown(KEY_DOWN)) 
+		boxList[i].posY++;
+	    
+	    if(IsKeyDown(KEY_LEFT)) 
+		boxList[i].posX--;
+	}
+
+    }
 }
 
 int main() {
 
+    srand(time(NULL));
+    
     char *stringOne = "Use the arrow keys to move around!";
     char *stringTwo = "Take the";
     char *stringThree = " box ";
     char *stringFour = "to the";
     char *stringFive = " circle!";
-    char *stringSix = "YOU HAVE WON!!!!";
+    //char *stringSix = "YOU HAVE WON!!!!";
 
     const int screenWidth = 800;
     const int screenHeight = 450;
 
-    int playerPosX = screenWidth/2;
-    int playerPosY = screenHeight/2;
-    int playerSize = 15.0;
+    playerPosX = screenWidth/2;
+    playerPosY = screenHeight/2;
+    playerSize = 15.0;
 
-    int boxPosX = screenWidth/3;
-    int boxPosY = screenHeight/4 * 3;
-    int boxSize = 20;
+    objectivePosX = screenWidth/3 * 2;
+    objectivePosY = screenHeight/5 * 3 ;
+    objectiveSize = 25.0;
 
-    int objectivePosX = screenWidth/3 * 2;
-    int objectivePosY = screenHeight/5 * 3 ;
-    int objectiveSize = 15.0;
-
-    int posYdiff;
-    int posXdiff;
-
-    int differenceThreshold = 10;
-
-    bool boxIsPickedUp = false;
-    bool objectiveReached = false;
-
-    int timeCounter = 0; //find a better way to implement timers
-    bool inEnding = false;
-    bool end = false;
-
-
+    //create window and set target fps
     InitWindow(screenWidth, screenHeight, "raylib [core] example - basic window");
-
     ToggleFullscreen();
+    HideCursor();
+    SetTargetFPS(144);               
 
-    SetTargetFPS(60);               
+    //create box structs
+    createAllBoxes();
 
-    while (!WindowShouldClose() && !end)
+    //draw loop
+    while (!WindowShouldClose())
     {
         BeginDrawing();
 
@@ -65,63 +163,18 @@ int main() {
             //make a little guy and a little box for him and a little green circle for him to take the box to :).
             DrawCircle(objectivePosX, objectivePosY, objectiveSize, GREEN);
             DrawCircle(playerPosX, playerPosY, playerSize, BLACK);
-            DrawRectangle(boxPosX, boxPosY, boxSize, boxSize, BROWN);
+          
+	    //draw the boxes!
+	    drawAllBoxes();
+	    
+	    //movement
+	    handleMovement();
+           	    
+	    //check if player collided with any boxes
+	    playerCollisionDetection();
 
-
-            //collision detection
-            if(!boxIsPickedUp) {
-                posYdiff = playerPosY - boxPosY - boxSize/2;
-                posXdiff = playerPosX - boxPosX - boxSize/2;
-                boxIsPickedUp = ((posYdiff < differenceThreshold && posYdiff > -differenceThreshold) && (posXdiff < differenceThreshold && posXdiff > -differenceThreshold));
-            }
-
-            if(!inEnding) {
-                //movement controls
-                if(IsKeyDown(KEY_UP)) {
-                    playerPosY--; //as you go farther down on the Y axis, Y gets larger. interesting
-                    if(boxIsPickedUp)
-                        boxPosY--;
-                }
-                if(IsKeyDown(KEY_RIGHT)) {
-                    playerPosX++; 
-                    if(boxIsPickedUp)
-                        boxPosX++;
-                }
-                if(IsKeyDown(KEY_DOWN)) {
-                    playerPosY++; 
-                    if(boxIsPickedUp)
-                        boxPosY++;
-                }
-                if(IsKeyDown(KEY_LEFT)) {
-                    playerPosX--; 
-                    if(boxIsPickedUp)
-                        boxPosX--;
-                }
-            }
-
-            //check if objective is reached (only check when box is picked up since if box isn't picked up, objective literally can't be reached)
-            if(boxIsPickedUp) {
-                posYdiff = objectivePosY - boxPosY - boxSize/2;
-                posXdiff = objectivePosX - boxPosX - boxSize/2;
-                objectiveReached = ((posYdiff < differenceThreshold && posYdiff > -differenceThreshold) && (posXdiff < differenceThreshold && posXdiff > -differenceThreshold));
-            }
-
-            //check if objective is reached; if yes, trigger ending
-            if(objectiveReached) {
-                DrawText(stringSix, screenWidth/5, screenHeight/2, 50, GRAY);
-                inEnding = true;
-                timeCounter++;
-
-                if(timeCounter > 100) {
-                    end = true;
-                }
-            }
-            //have an objective that player has to take box to
-            //then EndDrawing(); followed by CloseWindow(); if 
-            //player position matches objective's position
-
-            //changes happening ayoo!!!! <--this was just to test github lol
-
+	    //check if any boxes have collided with the objective
+	    objectiveCollisionDetection();
 
         EndDrawing();
     }
